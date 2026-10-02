@@ -175,6 +175,14 @@ func TestConstraintCheck(t *testing.T) {
 		{"^0.2", "0.5.6", false},
 		{"^0.0.3", "0.0.3", true},
 		{"^0.0.3", "0.0.4", false},
+		{"^*", "0.0.0", true},
+		{"^*", "0.0.1", true},
+		{"^*", "0.1.0", true},
+		{"^*", "1.2.3", true},
+		{"^x", "2.3.4", true},
+		{"^X", "0.1.0", true},
+		{"^0.0.0", "0.0.0", true},
+		{"^0.0.0", "0.0.1", false},
 		{"^0.0", "0.0.3", true},
 		{"^0.0", "0.1.4", false},
 		{"^0.0", "1.0.4", false},
@@ -397,6 +405,12 @@ func TestConstraintsCheck(t *testing.T) {
 		{"^1.2.x-alpha", "1.1.1-beta1", false},
 		{"^0.0.1", "0.0.1", true},
 		{"^0.0.1", "0.3.1", false},
+		{"^*", "1.2.3", true},
+		{"^*", "0.1.0", true},
+		{"^*", "0.0.1", true},
+		{"^*", "0.0.0", true},
+		{"^x", "1.2.3", true},
+		{"^X", "0.1.0", true},
 		{"~*", "2.1.1", true},
 		{"~1", "2.1.1", false},
 		{"~1", "1.3.5", true},
@@ -454,6 +468,8 @@ func TestConstraintsCheckIncludePrerelease(t *testing.T) {
 		{"^1.x", "1.1.1-beta1", true},
 		{"~1.1", "1.1.1-alpha", true},
 		{"*", "1.2.3-alpha", true},
+		{"^*", "1.2.3-alpha", true},
+		{"^*", "0.0.0-alpha", true},
 		{"= 2.0", "2.0.1-beta", true},
 
 		// This next group of tests handles normal cases
@@ -1182,6 +1198,34 @@ func TestTextUnmarshalConstraints(t *testing.T) {
 		got = cs.String()
 		if got != tc.want {
 			t.Errorf("Error unmarshaling constraint, unexpected object content: got=%q want=%q", got, tc.want)
+		}
+	}
+}
+
+func TestCaretWildcardConstraint(t *testing.T) {
+	c, err := NewConstraint("^*")
+	if err != nil {
+		t.Fatalf("unexpected error creating constraint: %s", err)
+	}
+
+	tests := []struct {
+		version string
+		matches bool
+	}{
+		{"0.0.0", true},
+		{"0.0.1", true},
+		{"0.1.0", true},
+		{"1.2.3", true},
+		{"2.0.0", true},
+	}
+
+	for _, tc := range tests {
+		v, err := NewVersion(tc.version)
+		if err != nil {
+			t.Fatalf("unexpected error creating version %s: %s", tc.version, err)
+		}
+		if matches := c.Check(v); matches != tc.matches {
+			t.Errorf("expected ^* matching %s to be %v, got %v", tc.version, tc.matches, matches)
 		}
 	}
 }
