@@ -282,8 +282,10 @@ func TestExpandWildcardVersion(t *testing.T) {
 		{[][]string{{">1.x"}}, [][]string{{">=2.0.0"}}},
 		{[][]string{{"<1.x"}}, [][]string{{"<1.0.0"}}},
 		{[][]string{{"!=1.x"}}, [][]string{{"<1.0.0", ">=2.0.0"}}},
-		{[][]string{{"1.2.x"}}, [][]string{{">=1.2.0", "<1.3.0"}}},
-		{[][]string{{"1.x"}}, [][]string{{">=1.0.0", "<2.0.0"}}},
+		{[][]string{{"1.2.x"}}, [][]string{{">=1.2.0-0", "<1.3.0"}}},
+		{[][]string{{"=1.2.x"}}, [][]string{{">=1.2.0-0", "<1.3.0"}}},
+		{[][]string{{"==1.2.x"}}, [][]string{{">=1.2.0-0", "<1.3.0"}}},
+		{[][]string{{"1.x"}}, [][]string{{">=1.0.0-0", "<2.0.0"}}},
 	}
 
 	for _, tc := range tests {
@@ -460,6 +462,45 @@ func TestParseRange(t *testing.T) {
 			{"1.1.9", false},
 			{"1.2.6", false},
 			{"1.3.0", true},
+		}},
+		{"0.49.x", []tv{
+			{"0.49.0-0", true},
+			{"0.49.0-alpha", true},
+			{"0.49.0-alpha.1", true},
+			{"0.49.0-beta+build", true},
+			{"0.49.0", true},
+			{"0.49.1-alpha", true},
+			{"0.49.1", true},
+			{"0.48.9", false},
+			{"0.48.9-alpha", false},
+			{"0.50.0", false},
+		}},
+		{"=0.49.x", []tv{
+			{"0.49.0-alpha", true},
+			{"0.49.0", true},
+			{"0.49.1-alpha", true},
+			{"0.49.1", true},
+			{"0.48.9", false},
+			{"0.50.0", false},
+		}},
+		{"1.x", []tv{
+			{"1.0.0-0", true},
+			{"1.0.0-alpha", true},
+			{"1.0.0", true},
+			{"1.1.0-alpha", true},
+			{"1.2.3", true},
+			{"0.9.9", false},
+			{"0.9.9-alpha", false},
+			{"2.0.0", false},
+		}},
+		{"1.2.x", []tv{
+			{"1.2.0-0", true},
+			{"1.2.0-alpha", true},
+			{"1.2.0", true},
+			{"1.2.9", true},
+			{"1.1.9", false},
+			{"1.1.9-alpha", false},
+			{"1.3.0", false},
 		}},
 		// Combined Expressions
 		{">1.2.2 <1.2.4 || >=2.0.0", []tv{
